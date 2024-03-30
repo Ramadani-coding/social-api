@@ -33,3 +33,4 @@ Route::get('/v1/auth/logout', [AuthController::class, 'logout'])->middleware('au
 
 Route::get('/v1/posts', [PostController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/v1/posts', [PostController::class, 'store'])->middleware('auth:sanctum');
+Route::delete('/v1/posts/{id}', [PostController::class, 'destroy'])->middleware('auth:sanctum');

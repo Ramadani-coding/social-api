@@ -130,8 +130,27 @@ class PostController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        //
+
+        $post = Post::withTrashed()->findOrFail($id);
+
+        if ($post->trashed()) {
+            return response()->json([
+                'message' => "Post not found",
+            ], 404);
+        }
+
+        if ($post->user_id !== auth()->user()->id) {
+            return response()->json([
+                'message' => "Forbidden access",
+            ], 403);
+        }
+
+        $post->delete();
+
+        return response()->json([
+            'message' => "Post deleted successfully",
+        ], 204);
     }
 }
