@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\PostAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
 {
@@ -16,7 +19,7 @@ class PostController extends Controller
         $page = $request->input('page', 1);
         $size = $request->input('size', 10);
 
-        $posts = Post::with('user')->paginate($size, ['*'], 'page', $page);
+        $posts = Post::with('user', 'postAttachments')->paginate($size, ['*'], 'page', $page);
 
         return response()->json([
             "page" => $posts->currentPage() - 1,
@@ -38,20 +41,66 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        // Start Validasi inputan
+        $rules = [
             'caption' => 'required',
-        ]);
+            'attachments.*' => 'required|image|mimes:jpg,jpeg,webp,png,gif'
+        ];
 
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => "Invalid field",
+                "errors" => $validator->errors(),
+            ], 401);
+        }
+        // End Validasi inputan
+
+        // Start Insert table posts
         $userId = Auth::id();
 
-        Post::create([
+        $post = Post::create([
             'caption' => $request->caption,
             'user_id' => $userId
         ]);
+        // Start Insret table posts
+
+        // Jalankan perintah ini ketika data berhasil di masukkan kedalam table post
+        // untuk insert ke dalam table post_attachments
+        if ($post) {
+            if ($request->has('attachments')) {
+                $images = $request->file('attachments');
+
+                foreach ($images as $image) {
+                    $extension = $image->extension();
+                    $name = rand() . '.' . $extension;
+
+                    $path = public_path('posts');
+
+                    $image->move($path, $name);
+
+                    PostAttachment::create([
+                        'storage_path' => 'posts/' . $name,
+                        'post_id' => $post->id
+                    ]);
+                }
+            } else {
+                return response()->json([
+                    'message' => "Invalid field",
+                    "errors" => $validator->errors(),
+                ], 401);
+            }
+        } else {
+            return response()->json([
+                'message' => "Invalid field",
+                "errors" => $validator->errors(),
+            ], 401);
+        }
 
         return response()->json([
-            'message' => "Create post success"
-        ]);
+            'message' => "Create post success",
+        ], 201);
     }
 
     /**
