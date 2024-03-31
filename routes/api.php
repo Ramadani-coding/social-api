@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FollowController;
 use App\Http\Controllers\PostController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -34,3 +35,7 @@ Route::get('/v1/auth/logout', [AuthController::class, 'logout'])->middleware('au
 Route::get('/v1/posts', [PostController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/v1/posts', [PostController::class, 'store'])->middleware('auth:sanctum');
 Route::delete('/v1/posts/{id}', [PostController::class, 'destroy'])->middleware('auth:sanctum');
+
+Route::post('/v1/users/{username}/follow', [FollowController::class, 'follow'])->middleware('auth:sanctum');
+Route::delete('/v1/users/{username}/unfollow', [FollowController::class, 'unfollow'])->middleware('auth:sanctum');
+Route::get('/v1/following', [FollowController::class, 'getFollowing'])->middleware('auth:sanctum');
