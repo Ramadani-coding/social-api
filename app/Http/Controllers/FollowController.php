@@ -9,6 +9,23 @@ use Illuminate\Support\Facades\Auth;
 
 class FollowController extends Controller
 {
+    public function getFollowers(Request $request, $username)
+    {
+        $user = Auth::user();
+
+        $follower = User::where('username', $username)->first();
+
+        $followers = Follow::where('following_id', $follower->id)
+            ->where('is_acccepted', true)
+            ->with('follower') // Ambil data pengguna pengikut
+            ->get()
+            ->pluck('follower');
+
+        return response()->json([
+            "followers" => $followers
+        ], 200);
+    }
+
     public function getFollowing()
     {
         $user = Auth::user();
@@ -95,5 +112,42 @@ class FollowController extends Controller
         return response()->json([
             "message" => "unfollow deleted successfully"
         ], 204);
+    }
+
+    public function acceptFollow(Request $request, $username)
+    {
+        $user = Auth::user();
+
+        $userToAccept = User::where('username', $username)->first();
+
+        if (!$userToAccept) {
+            return response()->json([
+                "message" => "User not found"
+            ], 404);
+        }
+
+        $isFollowing = Follow::where('follower_id', $userToAccept->id)
+            ->where('following_id', $user->id)
+            ->first();
+
+        if (!$isFollowing) {
+            return response()->json([
+                "message" => "The user is not following you"
+            ], 422);
+        }
+
+        if ($isFollowing->is_acccepted) {
+            return response()->json([
+                "message" => "Follow request is already accepted"
+            ], 422);
+        }
+
+        $isFollowing->update([
+            'is_acccepted' => true
+        ]);
+
+        return response()->json([
+            "message" => "Follow request accepted"
+        ], 200);
     }
 }
