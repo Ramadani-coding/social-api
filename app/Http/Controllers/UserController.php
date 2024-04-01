@@ -57,6 +57,10 @@ class UserController extends Controller
             $posts = "No posts yet";
         }
 
+        if ($postCount < 1 && $isYourAccount === true) {
+            $posts = "Capture moments with friends";
+        }
+
         $followingStatus = 'not-following';
 
         if ($user) {
