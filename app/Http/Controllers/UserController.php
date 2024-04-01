@@ -25,7 +25,7 @@ class UserController extends Controller
         ], 200);
     }
 
-    public function getDetailUser($username)
+    public function getDetailUser(Request $request, $username)
     {
         $user = Auth::user();
 
@@ -38,30 +38,34 @@ class UserController extends Controller
             ], 404);
         }
 
-        $postCount = Post::where('user_id', $user->id)->count();
-        $followersCount = Follow::where('following_id', $user->id)->where('is_acccepted', true)->count();
-        $followingCount = Follow::where('follower_id', $user->id)->where('is_acccepted', true)->count();
+        $postCount = Post::where('user_id', $detailUser->id)->count();
+        $followersCount = Follow::where('following_id', $detailUser->id)->where('is_acccepted', true)->count();
+        $followingCount = Follow::where('follower_id', $detailUser->id)->where('is_acccepted', true)->count();
 
         $isYourAccount = false;
         if ($user && $user->id === $detailUser->id) {
             $isYourAccount = true;
         }
 
-        $posts = [];
-        if ($user->is_private) {
+        if ($detailUser->is_private) {
             $posts = "This account is private";
         } else {
-            $posts = Post::with('postAttachments')->where('user_id', $user->id)->get();
+            $posts = Post::with('postAttachments')->where('user_id', $detailUser->id)->get();
+        }
+
+        if ($postCount < 1) {
+            $posts = "No posts yet";
         }
 
         $followingStatus = 'not-following';
+
         if ($user) {
             $following = Follow::where('follower_id', $user->id)
-                ->where('following_id', $user->id)
+                ->where('following_id', $detailUser->id)
                 ->first();
 
             if ($following) {
-                if ($following->is_accepted) {
+                if ($following->is_acccepted) {
                     $followingStatus = 'following';
                 } else {
                     $followingStatus = 'requested';
@@ -69,11 +73,12 @@ class UserController extends Controller
             }
         }
 
+
         return response()->json([
-            "id" => $user->id,
-            "full_name" => $user->full_name,
-            "username" => $user->username,
-            "bio" => $user->bio,
+            "id" => $detailUser->id,
+            "full_name" => $detailUser->full_name,
+            "username" => $detailUser->username,
+            "bio" => $detailUser->bio,
             "is_private" => $user->is_private,
             "is_your_account" => $isYourAccount,
             "posts_count" => $postCount,

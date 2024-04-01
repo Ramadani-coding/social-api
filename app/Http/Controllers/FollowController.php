@@ -73,15 +73,27 @@ class FollowController extends Controller
             ], 422);
         }
 
+        if ($userToFollow->is_private === 0) {
+            $isAcccepted = true;
+        } else {
+            $isAcccepted = false;
+        }
+
+        if ($isAcccepted) {
+            $status = "following";
+        } else {
+            $status = "requested";
+        }
+
         Follow::create([
             'follower_id' => $user->id,
             'following_id' => $userToFollow->id,
-            'is_acccepted' => false
+            'is_acccepted' => $isAcccepted
         ]);
 
         return response()->json([
             "message" => "Follow success",
-            "status" => "following | requested"
+            "status" => $status
         ], 200);
     }
 
