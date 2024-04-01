@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -43,3 +44,6 @@ Route::get('/v1/following', [FollowController::class, 'getFollowing'])->middlewa
 Route::put('/v1/users/{username}/accept', [FollowController::class, 'acceptFollow'])->middleware('auth:sanctum');
 
 Route::get('/v1/users/{username}/followers', [FollowController::class, 'getFollowers'])->middleware('auth:sanctum');
+
+Route::get('/v1/users', [UserController::class, 'getUsers'])->middleware('auth:sanctum');
+Route::get('/v1/users/{username}', [UserController::class, 'getDetailUser'])->middleware('auth:sanctum');
